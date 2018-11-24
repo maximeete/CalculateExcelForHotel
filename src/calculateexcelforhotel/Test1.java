@@ -236,9 +236,9 @@ public class Test1 {
         //导出文件
         String luJing = file.getParent()+"\\ben.xls";
         try {
-            FileOutputStream fileout = new FileOutputStream(luJing);
-            wb.write(fileout);
-            fileout.close();
+            try (FileOutputStream fileout = new FileOutputStream(luJing)) {
+                wb.write(fileout);
+            }
             wb.close();
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
@@ -251,7 +251,7 @@ public class Test1 {
 
         @Override
         public void drop(DropTargetDropEvent dtde) {
-            File file = null;
+            File file;
 
             //下面这一句不写就会报错，导致下面无法获取fileList
             dtde.acceptDrop(DnDConstants.ACTION_COPY);
@@ -286,9 +286,7 @@ public class Test1 {
                             JOptionPane.showMessageDialog(jf, "已经成功导出，请查看当前文件夹下的ben.xls");
                             }
                         }
-                    } catch (UnsupportedFlavorException ex) {
-                        Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
-                    } catch (IOException ex) {
+                    } catch (UnsupportedFlavorException | IOException ex) {
                         Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
                     }
 
@@ -303,27 +301,17 @@ public class Test1 {
         int a;
         try{
         a = Integer.parseInt(s);}
-        catch(Exception e){
+        catch(NumberFormatException e){
             e.printStackTrace();
             return 1;
         }
-        switch (a){
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            case 5:
-            case 6:
-            case 7:
-            case 8:
-            case 9:
-            case 10:
-            case 11:
-            case 12:
+        
+        int[] intArray = {1,2,3,4,5,6,7,8,9,10,11,12};
+        for(int benIntArray:intArray ){
+            if(a == benIntArray){
                 return a;
-            default:
-                return 1;
-                
+            }
         }
+        return 1;
     }
 }
