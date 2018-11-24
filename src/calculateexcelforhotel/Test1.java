@@ -37,11 +37,10 @@ public class Test1 {
 
     private void init() {
         jf = new JFrame("自动计算房间");
-        jf.setSize(400, 400);
-        
         ImageIcon im = new ImageIcon("22.png");
         JLabel jl = new JLabel(im);
         
+        jf.setSize(400, 400);
         jt.setBackground(new java.awt.Color(220,220,220));
         jt.setLineWrap(true);
         jt.setText("\n第一步：在门卡系统里导出excel文件"
@@ -69,16 +68,28 @@ public class Test1 {
         int fangJianNum = 0; //正常的房间间数
         int fangJianNum1 = 0; //低于30分钟的间数
         int fangJianNum2 = 0; //24到25之间小时的房间数
-        //int dbg = 0; //用于debug，不用删除
-        Row row = null;
+        Row row;
         Cell cell1, cell2;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
-        String ss1 = null;
-        String ss2 = null;
-        Date date1 = null;
-        Date date2 = null;
+        String ss1;
+        String ss2;
+        Date date1 = null;//入住日期
+        Date date2 = null;//退房日期
         long jianGeShiJian;
         Workbook wb = null;
+        CellStyle cellstyle;
+        CellStyle cellstyle2;
+        CellStyle cellstyle3;
+        Sheet sheet;
+        int lastRow;
+        Calendar calendar1 = Calendar.getInstance();//用于分析date1，登记的日期
+        Calendar calendar3 = Calendar.getInstance();//使用软件当天的日期，不要进行任何的set改变
+        Calendar calendar4 = Calendar.getInstance();//用于分析月底的天数  
+        int a1;
+        int tianShu;//一个在计算总天数的时候用于过渡的天数
+        Row rowL;//用于在Excel底部写分析结果
+        String luJing;//导出文件时的路径
+        double ll2;//用于处理情况2-3和2-4的double值
 
         try {
             wb = WorkbookFactory.create(file);
@@ -88,17 +99,17 @@ public class Test1 {
             Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        CellStyle cellstyle = wb.createCellStyle();
-        CellStyle cellstyle2 = wb.createCellStyle();
-        CellStyle cellstyle3 = wb.createCellStyle();
+        cellstyle = wb.createCellStyle();
+        cellstyle2 = wb.createCellStyle();
+        cellstyle3 = wb.createCellStyle();
         cellstyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cellstyle2.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cellstyle3.setFillPattern(FillPatternType.SOLID_FOREGROUND);
         cellstyle.setFillForegroundColor(IndexedColors.LIGHT_GREEN.getIndex());
         cellstyle2.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex());
         cellstyle3.setFillForegroundColor(IndexedColors.LIGHT_ORANGE.getIndex());
-        Sheet sheet = wb.getSheetAt(0);
-        int lastRow = sheet.getLastRowNum();
+        sheet = wb.getSheetAt(0);
+        lastRow = sheet.getLastRowNum();
 
         //关键就是这个for循环的处理，其他的都是筹备！！！！！！！！！----------------------------
         for (int i = 0; i < lastRow; i++) {
@@ -109,26 +120,22 @@ public class Test1 {
             
             ss1 = cell1.getStringCellValue();
              try {
-                    date1 = sdf.parse(ss1);//入住日期
+                    date1 = sdf.parse(ss1);
                 } catch (ParseException ex) {
                     Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
                 }
-             Calendar calendar1 = Calendar.getInstance();
              calendar1.setTime(date1);
-             int a1 = calendar1.get(Calendar.MONTH);
+             a1 = calendar1.get(Calendar.MONTH);
              
             //情况4
             if(cell2 == null && (a1+1) == num){
-               
-                Calendar calendar3 = Calendar.getInstance();
-                int tianShu = calendar3.get(Calendar.DATE)-calendar1.get(Calendar.DATE);
+                tianShu = calendar3.get(Calendar.DATE)-calendar1.get(Calendar.DATE);
                 fangJianNum = fangJianNum + tianShu;
                 row.createCell(18).setCellValue(tianShu);
                 continue;}
             //情况5
             else if(cell2 == null && (num-1) == (a1+1)){
-                Calendar calendar3 = Calendar.getInstance();
-                int tianShu = calendar3.get(Calendar.DATE) -1;
+                tianShu = calendar3.get(Calendar.DATE) -1;
                 fangJianNum = fangJianNum + tianShu;
                 row.createCell(18).setCellValue(tianShu);
                 continue;
@@ -148,7 +155,7 @@ public class Test1 {
             
             ss2 = cell2.getStringCellValue();
             try {
-                date2 = sdf.parse(ss2);//退房日期
+                date2 = sdf.parse(ss2);
             } catch (ParseException ex) {
                 Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
             }
@@ -157,7 +164,7 @@ public class Test1 {
             int a2 = calendar2.get(Calendar.MONTH);
             //情况1
             if((a2+1) == num && (a1+1) == (num -1)){
-                int tianShu = calendar2.get(Calendar.DATE)-1;
+                tianShu = calendar2.get(Calendar.DATE)-1;
                 fangJianNum = fangJianNum + tianShu;
                 row.createCell(18).setCellValue(tianShu);
             }
@@ -182,8 +189,8 @@ public class Test1 {
                 //最后一天超过24小时，小于25小时，一小时为3，600,000，这种情况只算一天哦
                 //情况2-3
                 else if (jianGeShiJian > 86400000 && (jianGeShiJian%86400000)<=3600000) {
-                    double ll2 = (double) jianGeShiJian / (1000 * 60 * 60 * 24);
-                    int tianShu = (int) Math.ceil(ll2)-1;
+                    ll2 = (double) jianGeShiJian / (1000 * 60 * 60 * 24);
+                    tianShu = (int) Math.ceil(ll2)-1;
                     fangJianNum = fangJianNum + tianShu;
                     fangJianNum2++;
                     for(int ii = 0;ii<row.getLastCellNum();ii++){
@@ -195,20 +202,18 @@ public class Test1 {
                 //最后一天超过25个小时的
                 //情况2-4
                 else{
-                    double ll2 = (double) jianGeShiJian / (1000 * 60 * 60 * 24);
-                    int tianShu = (int) Math.ceil(ll2);
+                    ll2 = (double) jianGeShiJian / (1000 * 60 * 60 * 24);
+                    tianShu = (int) Math.ceil(ll2);
                     fangJianNum = fangJianNum + tianShu;
                     row.createCell(18).setCellValue(tianShu);
                         } 
                     }
             //情况3
             else if((a2+1) == (num+1) && (a1+1) == (num)){
-                Calendar a = Calendar.getInstance();  
-                a.set(Calendar.MONTH, num-1);
-                a.set(Calendar.DATE, 1);//把日期设置为当月第一天  
-                a.roll(Calendar.DATE, -1);//日期回滚一天，也就是最后一天  
-                int maxDate = a.get(Calendar.DATE);
-                int tianShu = maxDate - calendar1.get(Calendar.DATE)+1;
+                calendar4.set(Calendar.MONTH, num-1);
+                calendar4.set(Calendar.DATE, 1);//把日期设置为当月第一天  
+                calendar4.roll(Calendar.DATE, -1);//日期回滚一天，也就是最后一天  
+                tianShu = calendar4.get(Calendar.DATE) - calendar1.get(Calendar.DATE)+1;
                 fangJianNum = fangJianNum + tianShu;
                 row.createCell(18).setCellValue(tianShu);
                     }
@@ -221,7 +226,7 @@ public class Test1 {
             }
         //---------------------------------------------------------------------
         
-        Row rowL = sheet.createRow(lastRow +2);
+        rowL = sheet.createRow(lastRow +2);
         rowL.createCell(0).setCellValue(num +"月份总间数：" + fangJianNum + "间");
         rowL = sheet.createRow(lastRow +3);
         rowL.createCell(0).setCellValue("30分钟内的总间数：" + fangJianNum1 + "间，表格中标了淡绿色，并不算间数");
@@ -234,7 +239,7 @@ public class Test1 {
         
         
         //导出文件
-        String luJing = file.getParent()+"\\ben.xls";
+        luJing = file.getParent()+"\\ben.xls";
         try {
             try (FileOutputStream fileout = new FileOutputStream(luJing)) {
                 wb.write(fileout);
@@ -252,31 +257,40 @@ public class Test1 {
         @Override
         public void drop(DropTargetDropEvent dtde) {
             File file;
+            Transferable tf;
+            DataFlavor[] df;
+            DataFlavor ddf;
+            List fileList;
+            String filename;//文件名
+            String houZhui;//后缀名
+            int a;//用于过渡
+            String yueFen;//用于得到用户输入的值，String
+            int ben1;//将yueFen转化为int值
 
             //下面这一句不写就会报错，导致下面无法获取fileList
             dtde.acceptDrop(DnDConstants.ACTION_COPY);
 
-            Transferable tf = dtde.getTransferable();
-            DataFlavor[] df = dtde.getCurrentDataFlavors();
+            tf = dtde.getTransferable();
+            df = dtde.getCurrentDataFlavors();
             //为什么要做下面的判断？因为非常有可能拖入其他的类型，比如文本类型
             //那么，如果没有javaFileListeFlavor类型的话，就没有下面的步骤了
             for (int i = 0; i < df.length; i++) {
-                DataFlavor ddf = df[i];
+                ddf = df[i];
                 if (ddf.equals(DataFlavor.javaFileListFlavor)) {
                     try {
-                        List fileList = (List) tf.getTransferData(ddf);
+                        fileList = (List) tf.getTransferData(ddf);
                         for (Object f : fileList) {
                             file = (File) f;
-                            String filename = file.getAbsolutePath();
-                            int a = filename.lastIndexOf(".");
-                            String houZhui = filename.substring(a + 1);
+                            filename = file.getAbsolutePath();
+                            a = filename.lastIndexOf(".");
+                            houZhui = filename.substring(a + 1);
                             if (!houZhui.equals("xls")) {
                                 JOptionPane.showMessageDialog(jf, "你拖入的文件不是xls格式的");
                                 continue;
                             }
-                            String yueFen = JOptionPane.showInputDialog(jf, 
+                            yueFen = JOptionPane.showInputDialog(jf, 
                                     "请问需要查哪一个月份的？", "输入月份", JOptionPane.PLAIN_MESSAGE);
-                            int ben1 = dealString(yueFen);
+                            ben1 = dealString(yueFen);
                             if(ben1 == 1){
                                 JOptionPane.showMessageDialog(jf, "你输入的数字有误，请重新拖入文件");
                                 dtde.dropComplete(true);
@@ -299,6 +313,8 @@ public class Test1 {
     
     private int dealString(String s){
         int a;
+        int[] intArray= {1,2,3,4,5,6,7,8,9,10,11,12};
+        
         try{
         a = Integer.parseInt(s);}
         catch(NumberFormatException e){
@@ -306,7 +322,6 @@ public class Test1 {
             return 1;
         }
         
-        int[] intArray = {1,2,3,4,5,6,7,8,9,10,11,12};
         for(int benIntArray:intArray ){
             if(a == benIntArray){
                 return a;
