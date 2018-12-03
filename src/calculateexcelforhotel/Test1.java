@@ -64,7 +64,7 @@ public class Test1 {
     }
 
     //处理Excel
-    private void dealExcel(File file,int num) {
+    private void dealExcel(File file,int num,String houZhui) {
         int fangJianNum = 0; //正常的房间间数
         int fangJianNum1 = 0; //低于30分钟的间数
         int fangJianNum2 = 0; //24到25之间小时的房间数
@@ -93,6 +93,7 @@ public class Test1 {
         Row rowL;//用于在Excel底部写分析结果
         String luJing;//导出文件时的路径
         double ll2;//用于处理情况2-3和2-4的double值
+        String houZhui1 = houZhui;//文件的后缀名
 
         try {
             wb = WorkbookFactory.create(file);
@@ -253,7 +254,7 @@ public class Test1 {
         
         
         //导出文件
-        luJing = file.getParent()+"\\ben.xls";
+        luJing = file.getParent()+"\\ben." + houZhui1;
         try {
             try (FileOutputStream fileout = new FileOutputStream(luJing)) {
                 wb.write(fileout);
@@ -298,8 +299,8 @@ public class Test1 {
                             filename = file.getAbsolutePath();
                             a = filename.lastIndexOf(".");
                             houZhui = filename.substring(a + 1);
-                            if (!houZhui.equals("xls")) {
-                                JOptionPane.showMessageDialog(jf, "你拖入的文件不是xls格式的");
+                            if (!houZhui.equals("xls") && !houZhui.equals("xlsx")) {
+                                JOptionPane.showMessageDialog(jf, "你拖入的文件不是excel文件");
                                 continue;
                             }
                             yueFen = JOptionPane.showInputDialog(jf, 
@@ -310,7 +311,7 @@ public class Test1 {
                                 dtde.dropComplete(true);
                             }else{
                             
-                            dealExcel(file,ben1);
+                            dealExcel(file,ben1,houZhui);
                             JOptionPane.showMessageDialog(jf, "已经成功导出，请查看当前文件夹下的ben.xls");
                             }
                         }
