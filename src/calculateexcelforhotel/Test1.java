@@ -83,9 +83,12 @@ public class Test1 {
         Sheet sheet;
         int lastRow;
         Calendar calendar1 = Calendar.getInstance();//用于分析date1，登记的日期
+        Calendar calendar2 = Calendar.getInstance();//用于分析date1，退房日期的
         Calendar calendar3 = Calendar.getInstance();//使用软件当天的日期，不要进行任何的set改变
-        Calendar calendar4 = Calendar.getInstance();//用于分析月底的天数  
-        int a1;
+        Calendar calendar4 = Calendar.getInstance();//用于分析月底的天数，因为设计到setDate，所以，才用到这个变量
+        int a1;//登记日期的月份
+        int a2;//退房日期的月份
+        int a3;//查询日期的月份
         int tianShu;//一个在计算总天数的时候用于过渡的天数
         Row rowL;//用于在Excel底部写分析结果
         String luJing;//导出文件时的路径
@@ -126,13 +129,24 @@ public class Test1 {
                 }
              calendar1.setTime(date1);
              a1 = calendar1.get(Calendar.MONTH);
+             a3 = calendar3.get(Calendar.MONTH);
              
             //情况4
-            if(cell2 == null && (a1+1) == num){
+            if(cell2 == null && (a1+1) == num && (a3+1) == num){
                 tianShu = calendar3.get(Calendar.DATE)-calendar1.get(Calendar.DATE);
                 fangJianNum = fangJianNum + tianShu;
                 row.createCell(18).setCellValue(tianShu);
                 continue;}
+            //情况6
+            else if(cell2 == null && (a1+1) == num && (a3+1) != num){
+                calendar4.set(Calendar.MONTH, a1);//放入入住那天的月份
+                calendar4.set(Calendar.DATE, 1);//把日期设置为当月第一天  
+                calendar4.roll(Calendar.DATE, -1);//日期回滚一天，也就是最后一天  
+                tianShu = calendar4.get(Calendar.DATE) - calendar1.get(Calendar.DATE)+1;
+                fangJianNum = fangJianNum + tianShu;
+                row.createCell(18).setCellValue(tianShu);
+                continue;
+            }
             //情况5
             else if(cell2 == null && (num-1) == (a1+1)){
                 tianShu = calendar3.get(Calendar.DATE) -1;
@@ -152,16 +166,16 @@ public class Test1 {
                 continue;
             }
             
-            
+            //cell2不为空才往下计算
             ss2 = cell2.getStringCellValue();
             try {
                 date2 = sdf.parse(ss2);
             } catch (ParseException ex) {
                 Logger.getLogger(Test1.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Calendar calendar2 = Calendar.getInstance();
+            
             calendar2.setTime(date2);
-            int a2 = calendar2.get(Calendar.MONTH);
+            a2 = calendar2.get(Calendar.MONTH);
             //情况1
             if((a2+1) == num && (a1+1) == (num -1)){
                 tianShu = calendar2.get(Calendar.DATE)-1;
